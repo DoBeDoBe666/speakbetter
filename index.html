@@ -1,0 +1,1021 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英语发音评测 - SpeakBetter</title>
+    <style>
+        :root {
+            --primary: #4F46E5;
+            --primary-light: #818CF8;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --bg: #F8FAFC;
+            --card: #FFFFFF;
+            --text: #1E293B;
+            --text-secondary: #64748B;
+            --border: #E2E8F0;
+            --shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+            --radius: 16px;
+            --radius-sm: 10px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 30%, #F0F4FF 60%, #F8FAFC 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 640px;
+            background: var(--card);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            padding: 40px 36px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light), #A78BFA, var(--primary-light));
+            border-radius: 24px 24px 0 0;
+        }
+
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .header .logo {
+            font-size: 48px;
+            margin-bottom: 8px;
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .header h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+        .header p {
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-top: 4px;
+        }
+
+        /* Sentence Selection */
+        .sentence-section {
+            margin-bottom: 24px;
+        }
+        .sentence-section label {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text);
+            display: block;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .sentence-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            color: var(--text);
+            background: var(--bg);
+            cursor: pointer;
+            transition: all 0.2s;
+            appearance: none;
+            -webkit-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%2364748B' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 14px center;
+            padding-right: 40px;
+        }
+        .sentence-select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+        .custom-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 15px;
+            color: var(--text);
+            background: var(--bg);
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+        .custom-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,0.1);
+        }
+        .reference-text-display {
+            background: #F0F4FF;
+            border: 2px dashed var(--primary-light);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-top: 12px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text);
+            text-align: center;
+            letter-spacing: 0.3px;
+            line-height: 1.6;
+        }
+
+        /* Waveform Canvas */
+        .waveform-container {
+            background: #1E1E2E;
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 20px;
+            position: relative;
+            overflow: hidden;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .waveform-container canvas {
+            width: 100%;
+            height: 80px;
+            display: block;
+        }
+        .recording-indicator {
+            position: absolute;
+            top: 14px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #EF4444;
+            font-size: 13px;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .recording-indicator.active { opacity: 1; }
+        .recording-dot {
+            width: 10px;
+            height: 10px;
+            background: #EF4444;
+            border-radius: 50%;
+            animation: blink 0.8s infinite;
+        }
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Live Transcript */
+        .live-transcript {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            min-height: 48px;
+            font-size: 16px;
+            color: var(--text);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        .live-transcript.listening {
+            border-color: var(--primary-light);
+            background: #F8FAFF;
+        }
+        .live-transcript .interim {
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+        .live-transcript .final {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            flex: 1;
+            min-width: 120px;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            letter-spacing: 0.3px;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn:active { transform: scale(0.96); }
+        .btn-record {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 14px rgba(79,70,229,0.35);
+        }
+        .btn-record:hover {
+            background: #4338CA;
+            box-shadow: 0 6px 20px rgba(79,70,229,0.45);
+            transform: translateY(-1px);
+        }
+        .btn-record.recording {
+            background: var(--danger);
+            box-shadow: 0 4px 14px rgba(239,68,68,0.35);
+            animation: pulse-rec 1.5s infinite;
+        }
+        @keyframes pulse-rec {
+            0%, 100% { box-shadow: 0 4px 14px rgba(239,68,68,0.35); }
+            50% { box-shadow: 0 4px 28px rgba(239,68,68,0.6); }
+        }
+        .btn-play {
+            background: white;
+            color: var(--text);
+            border: 2px solid var(--border);
+        }
+        .btn-play:hover {
+            background: var(--bg);
+            border-color: #CBD5E1;
+        }
+        .btn-play:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .btn-reset {
+            background: white;
+            color: var(--text-secondary);
+            border: 2px solid var(--border);
+        }
+        .btn-reset:hover {
+            background: #FEF2F2;
+            border-color: #FECACA;
+            color: var(--danger);
+        }
+
+        /* Results */
+        .results {
+            display: none;
+            animation: slideUp 0.4s ease-out;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .results.show { display: block; }
+        .score-circle-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .score-circle {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            font-size: 42px;
+            font-weight: 800;
+            color: white;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+        }
+        .score-circle.great { background: linear-gradient(135deg, #10B981, #34D399); }
+        .score-circle.good { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+        .score-circle.practice { background: linear-gradient(135deg, #F97316, #FB923C); }
+        .score-circle.needs-work { background: linear-gradient(135deg, #EF4444, #F87171); }
+        .score-label {
+            font-size: 13px;
+            font-weight: 500;
+            opacity: 0.9;
+            position: absolute;
+            bottom: 24px;
+        }
+        .feedback-text {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 16px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .detail-card {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            text-align: center;
+        }
+        .detail-card .value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+        }
+        .detail-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 2px;
+        }
+        .word-comparison {
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            font-size: 14px;
+            line-height: 2;
+        }
+        .word-comparison .word-correct {
+            color: #10B981;
+            font-weight: 600;
+        }
+        .word-comparison .word-wrong {
+            color: #EF4444;
+            font-weight: 600;
+            text-decoration: line-through;
+            text-decoration-color: #EF4444;
+        }
+        .word-comparison .word-missing {
+            color: #F59E0B;
+            font-weight: 600;
+            border-bottom: 2px dashed #F59E0B;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            .container { padding: 24px 18px; border-radius: 20px; }
+            .header h1 { font-size: 22px; }
+            .btn { padding: 12px 16px; font-size: 14px; }
+            .detail-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">🎯</div>
+        <h1>SpeakBetter</h1>
+        <p>AI 英语发音评测 · 实时互动反馈</p>
+    </div>
+
+    <!-- Sentence Selection -->
+    <div class="sentence-section">
+        <label>📝 选择练习句子</label>
+        <select class="sentence-select" id="sentenceSelect">
+            <option value="The quick brown fox jumps over the lazy dog">
+                🦊 The quick brown fox jumps over the lazy dog
+            </option>
+            <option value="I would like to order a cup of coffee please">
+                ☕ I would like to order a cup of coffee please
+            </option>
+            <option value="She sells seashells by the seashore">
+                🐚 She sells seashells by the seashore
+            </option>
+            <option value="How much wood would a woodchuck chuck">
+                🪵 How much wood would a woodchuck chuck
+            </option>
+            <option value="Peter Piper picked a peck of pickled peppers">
+                🌶️ Peter Piper picked a peck of pickled peppers
+            </option>
+            <option value="custom">✏️ 自定义句子...</option>
+        </select>
+        <input type="text" class="custom-input" id="customInput"
+               placeholder="输入你想要练习的英语句子..."
+               style="display:none;">
+        <div class="reference-text-display" id="referenceDisplay">
+            The quick brown fox jumps over the lazy dog
+        </div>
+    </div>
+
+    <!-- Waveform -->
+    <div class="waveform-container" id="waveformContainer">
+        <canvas id="waveformCanvas"></canvas>
+        <div class="recording-indicator" id="recIndicator">
+            <span class="recording-dot"></span> 录音中
+        </div>
+    </div>
+
+    <!-- Live Transcript -->
+    <div class="live-transcript" id="liveTranscript">
+        <span style="color:#94A3B8;">🎤 点击下方按钮开始录音，你的语音将实时显示在这里...</span>
+    </div>
+
+    <!-- Buttons -->
+    <div class="btn-group">
+        <button class="btn btn-record" id="btnRecord">
+            <span>🎙️</span> 开始录音
+        </button>
+        <button class="btn btn-play" id="btnPlay" disabled>
+            <span>▶️</span> 回放
+        </button>
+        <button class="btn btn-reset" id="btnReset">
+            <span>🔄</span> 重置
+        </button>
+    </div>
+
+    <!-- Results -->
+    <div class="results" id="results">
+        <div class="score-circle-container">
+            <div class="score-circle" id="scoreCircle">
+                <span id="scoreNumber">0</span>
+                <span class="score-label">分</span>
+            </div>
+        </div>
+        <div class="feedback-text" id="feedbackText"></div>
+        <div class="detail-grid">
+            <div class="detail-card">
+                <div class="value" id="accuracyVal">-</div>
+                <div class="label">准确度 Accuracy</div>
+            </div>
+            <div class="detail-card">
+                <div class="value" id="completenessVal">-</div>
+                <div class="label">完整度 Completeness</div>
+            </div>
+            <div class="detail-card">
+                <div class="value" id="wordsMatchedVal">-</div>
+                <div class="label">匹配词数</div>
+            </div>
+            <div class="detail-card">
+                <div class="value" id="speechSpeedVal">-</div>
+                <div class="label">语速 (词/分钟)</div>
+            </div>
+        </div>
+        <div class="word-comparison" id="wordComparison"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // ============ DOM Elements ============
+        const sentenceSelect = document.getElementById('sentenceSelect');
+        const customInput = document.getElementById('customInput');
+        const referenceDisplay = document.getElementById('referenceDisplay');
+        const btnRecord = document.getElementById('btnRecord');
+        const btnPlay = document.getElementById('btnPlay');
+        const btnReset = document.getElementById('btnReset');
+        const liveTranscript = document.getElementById('liveTranscript');
+        const recIndicator = document.getElementById('recIndicator');
+        const waveformCanvas = document.getElementById('waveformCanvas');
+        const waveformContainer = document.getElementById('waveformContainer');
+        const resultsDiv = document.getElementById('results');
+        const scoreCircle = document.getElementById('scoreCircle');
+        const scoreNumber = document.getElementById('scoreNumber');
+        const feedbackText = document.getElementById('feedbackText');
+        const accuracyVal = document.getElementById('accuracyVal');
+        const completenessVal = document.getElementById('completenessVal');
+        const wordsMatchedVal = document.getElementById('wordsMatchedVal');
+        const speechSpeedVal = document.getElementById('speechSpeedVal');
+        const wordComparison = document.getElementById('wordComparison');
+
+        // ============ State ============
+        let mediaStream = null;
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let recordedBlob = null;
+        let audioContext = null;
+        let analyser = null;
+        let animationId = null;
+        let recognition = null;
+        let finalTranscript = '';
+        let interimTranscript = '';
+        let recordingStartTime = 0;
+        let recordingEndTime = 0;
+        let isRecording = false;
+
+        // ============ Waveform ============
+        const canvasCtx = waveformCanvas.getContext('2d');
+
+        function resizeCanvas() {
+            const rect = waveformContainer.getBoundingClientRect();
+            waveformCanvas.width = rect.width - 40;
+            waveformCanvas.height = 80;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            if (!isRecording) drawIdleWaveform();
+        });
+
+        function drawIdleWaveform() {
+            const w = waveformCanvas.width;
+            const h = waveformCanvas.height;
+            canvasCtx.clearRect(0, 0, w, h);
+            canvasCtx.fillStyle = '#4F46E5';
+            const barCount = 40;
+            const barWidth = (w / barCount) * 0.6;
+            const gap = (w / barCount) * 0.4;
+            for (let i = 0; i < barCount; i++) {
+                const x = i * (barWidth + gap);
+                const barHeight = 4 + Math.sin(Date.now() / 800 + i * 0.5) * 6;
+                const y = (h - barHeight) / 2;
+                canvasCtx.fillStyle = `rgba(79, 70, 229, ${0.15 + Math.abs(Math.sin(i * 0.3)) * 0.2})`;
+                roundRect(canvasCtx, x, y, barWidth, barHeight, barWidth / 2);
+                canvasCtx.fill();
+            }
+            if (!isRecording && !animationId) {
+                animationId = requestAnimationFrame(() => {
+                    animationId = null;
+                    drawIdleWaveform();
+                });
+            }
+        }
+
+        function roundRect(ctx, x, y, w, h, r) {
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + w - r, y);
+            ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+            ctx.lineTo(x + w, y + h - r);
+            ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            ctx.lineTo(x + r, y + h);
+            ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+        }
+
+        function drawLiveWaveform() {
+            if (!analyser) return;
+            const w = waveformCanvas.width;
+            const h = waveformCanvas.height;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+            canvasCtx.clearRect(0, 0, w, h);
+
+            // Draw center line
+            canvasCtx.strokeStyle = 'rgba(79, 70, 229, 0.25)';
+            canvasCtx.lineWidth = 1;
+            canvasCtx.setLineDash([4, 8]);
+            canvasCtx.beginPath();
+            canvasCtx.moveTo(0, h / 2);
+            canvasCtx.lineTo(w, h / 2);
+            canvasCtx.stroke();
+            canvasCtx.setLineDash([]);
+
+            // Draw waveform
+            canvasCtx.strokeStyle = '#818CF8';
+            canvasCtx.lineWidth = 2.5;
+            canvasCtx.beginPath();
+            const sliceWidth = w / bufferLength;
+            let x = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = (v * h) / 2;
+                if (i === 0) canvasCtx.moveTo(x, y);
+                else canvasCtx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            canvasCtx.lineTo(w, h / 2);
+            canvasCtx.stroke();
+
+            // Gradient fill
+            const gradient = canvasCtx.createLinearGradient(0, 0, 0, h);
+            gradient.addColorStop(0, 'rgba(129, 140, 248, 0.15)');
+            gradient.addColorStop(0.5, 'rgba(79, 70, 229, 0.05)');
+            gradient.addColorStop(1, 'rgba(129, 140, 248, 0.15)');
+            canvasCtx.fillStyle = gradient;
+            canvasCtx.fill();
+
+            animationId = requestAnimationFrame(drawLiveWaveform);
+        }
+
+        // Start idle animation
+        drawIdleWaveform();
+
+        // ============ Speech Recognition ============
+        function initSpeechRecognition() {
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRecognition) {
+                console.warn('SpeechRecognition not supported');
+                return null;
+            }
+            const rec = new SpeechRecognition();
+            rec.continuous = true;
+            rec.interimResults = true;
+            rec.lang = 'en-US';
+            rec.maxAlternatives = 1;
+
+            rec.onresult = (event) => {
+                interimTranscript = '';
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const result = event.results[i];
+                    if (result.isFinal) {
+                        finalTranscript += result[0].transcript + ' ';
+                    } else {
+                        interimTranscript += result[0].transcript;
+                    }
+                }
+                updateLiveTranscript();
+            };
+
+            rec.onerror = (event) => {
+                console.error('Speech recognition error:', event.error);
+                if (event.error === 'no-speech') {
+                    // Silent, that's ok
+                } else if (event.error === 'not-allowed') {
+                    liveTranscript.innerHTML = '<span style="color:#EF4444;">⚠️ 请允许麦克风权限后重试</span>';
+                }
+            };
+
+            rec.onend = () => {
+                // Auto-restart if still recording
+                if (isRecording) {
+                    try { rec.start(); } catch (e) { /* ignore */ }
+                }
+            };
+
+            return rec;
+        }
+
+        function updateLiveTranscript() {
+            const display = finalTranscript + '<span class="interim">' + interimTranscript + '</span>';
+            if (display.trim()) {
+                liveTranscript.innerHTML = '<span class="final">' +
+                    finalTranscript + '</span><span class="interim">' + interimTranscript + '</span>';
+                liveTranscript.classList.add('listening');
+            } else {
+                liveTranscript.innerHTML = '<span style="color:#94A3B8;">🎤 正在聆听...请朗读上方句子</span>';
+                liveTranscript.classList.add('listening');
+            }
+        }
+
+        // ============ Recording ============
+        async function startRecording() {
+            if (isRecording) return;
+
+            // Reset previous state
+            finalTranscript = '';
+            interimTranscript = '';
+            audioChunks = [];
+            recordedBlob = null;
+            resultsDiv.classList.remove('show');
+            btnPlay.disabled = true;
+
+            try {
+                // Get mic access
+                mediaStream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        echoCancellation: true,
+                        noiseSuppression: true,
+                        sampleRate: 16000,
+                        channelCount: 1
+                    }
+                });
+
+                // Audio context for waveform
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+                const source = audioContext.createMediaStreamSource(mediaStream);
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 256;
+                source.connect(analyser);
+
+                // MediaRecorder
+                const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+                    ? 'audio/webm;codecs=opus' : 'audio/webm';
+                mediaRecorder = new MediaRecorder(mediaStream, { mimeType });
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data.size > 0) audioChunks.push(e.data);
+                };
+                mediaRecorder.onstop = () => {
+                    recordedBlob = new Blob(audioChunks, { type: mimeType });
+                    btnPlay.disabled = false;
+                    recordingEndTime = Date.now();
+                    performScoring();
+                };
+
+                // Start speech recognition
+                recognition = initSpeechRecognition();
+                if (recognition) {
+                    recognition.start();
+                    liveTranscript.innerHTML = '<span style="color:#94A3B8;">🎤 正在聆听...请朗读上方句子</span>';
+                    liveTranscript.classList.add('listening');
+                } else {
+                    liveTranscript.innerHTML = '<span style="color:#F59E0B;">⚠️ 您的浏览器不支持语音识别（请使用Chrome），但录音功能正常</span>';
+                }
+
+                // Start recording
+                mediaRecorder.start(100); // Collect data every 100ms
+                recordingStartTime = Date.now();
+                isRecording = true;
+
+                // Update UI
+                btnRecord.innerHTML = '<span>⏹️</span> 停止录音';
+                btnRecord.classList.add('recording');
+                recIndicator.classList.add('active');
+                waveformContainer.style.background = '#1E1E2E';
+
+                // Cancel idle animation, start live waveform
+                if (animationId) { cancelAnimationFrame(animationId);
+                    animationId = null; }
+                drawLiveWaveform();
+
+            } catch (err) {
+                console.error('Failed to start recording:', err);
+                if (err.name === 'NotAllowedError') {
+                    alert('请允许麦克风权限以使用录音功能。\nPlease allow microphone access.');
+                } else if (err.name === 'NotFoundError') {
+                    alert('未检测到麦克风设备。\nNo microphone found.');
+                } else {
+                    alert('录音启动失败: ' + err.message);
+                }
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+
+            // Stop recognition
+            if (recognition) {
+                try { recognition.stop(); } catch (e) { /* ignore */ }
+                recognition = null;
+            }
+
+            // Stop MediaRecorder
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+                mediaRecorder.stop();
+            }
+
+            // Stop waveform animation
+            if (animationId) { cancelAnimationFrame(animationId);
+                animationId = null; }
+            canvasCtx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            drawIdleWaveform();
+
+            // Stop media stream
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(track => track.stop());
+                mediaStream = null;
+            }
+
+            // Close audio context
+            if (audioContext && audioContext.state !== 'closed') {
+                audioContext.close();
+                audioContext = null;
+                analyser = null;
+            }
+
+            // Update UI
+            btnRecord.innerHTML = '<span>🎙️</span> 开始录音';
+            btnRecord.classList.remove('recording');
+            recIndicator.classList.remove('active');
+            waveformContainer.style.background = '#1E1E2E';
+            liveTranscript.classList.remove('listening');
+        }
+
+        // ============ Playback ============
+        function playRecording() {
+            if (!recordedBlob) return;
+            const url = URL.createObjectURL(recordedBlob);
+            const audio = new Audio(url);
+            audio.onended = () => URL.revokeObjectURL(url);
+            audio.play();
+        }
+
+        // ============ Scoring ============
+        function getReferenceText() {
+            if (sentenceSelect.value === 'custom') {
+                return customInput.value.trim();
+            }
+            return sentenceSelect.value;
+        }
+
+        function normalizeText(text) {
+            return text.toLowerCase()
+                .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?¿¡]/g, '')
+                .replace(/\s+/g, ' ')
+                .trim();
+        }
+
+        function levenshteinDistance(a, b) {
+            const matrix = [];
+            for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+            for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+            for (let i = 1; i <= b.length; i++) {
+                for (let j = 1; j <= a.length; j++) {
+                    if (b.charAt(i - 1) === a.charAt(j - 1)) {
+                        matrix[i][j] = matrix[i - 1][j - 1];
+                    } else {
+                        matrix[i][j] = Math.min(
+                            matrix[i - 1][j - 1] + 1,
+                            matrix[i][j - 1] + 1,
+                            matrix[i - 1][j] + 1
+                        );
+                    }
+                }
+            }
+            return matrix[b.length][a.length];
+        }
+
+        function performScoring() {
+            const referenceText = getReferenceText();
+            const recognizedText = finalTranscript.trim();
+
+            if (!recognizedText) {
+                // No speech detected
+                scoreNumber.textContent = '0';
+                scoreCircle.className = 'score-circle needs-work';
+                feedbackText.textContent = '😕 未检测到语音，请重试';
+                accuracyVal.textContent = '0%';
+                completenessVal.textContent = '0%';
+                wordsMatchedVal.textContent = '0';
+                speechSpeedVal.textContent = '0';
+                wordComparison.innerHTML = '<span style="color:#EF4444;">未识别到任何语音内容</span>';
+                resultsDiv.classList.add('show');
+                return;
+            }
+
+            // Normalize texts
+            const refNormalized = normalizeText(referenceText);
+            const recNormalized = normalizeText(recognizedText);
+
+            // Word-level comparison
+            const refWords = refNormalized.split(' ').filter(w => w);
+            const recWords = recNormalized.split(' ').filter(w => w);
+
+            // Calculate word accuracy
+            let matchedWords = 0;
+            const wordResults = [];
+            const maxLen = Math.max(refWords.length, recWords.length);
+
+            // Use greedy word matching
+            const recUsed = new Array(recWords.length).fill(false);
+            for (let i = 0; i < refWords.length; i++) {
+                let bestMatch = -1;
+                let bestScore = Infinity;
+                for (let j = 0; j < recWords.length; j++) {
+                    if (recUsed[j]) continue;
+                    const dist = levenshteinDistance(refWords[i], recWords[j]);
+                    const similarity = 1 - dist / Math.max(refWords[i].length, recWords[j].length);
+                    if (similarity > 0.6 && dist < bestScore) {
+                        bestScore = dist;
+                        bestMatch = j;
+                    }
+                }
+                if (bestMatch >= 0) {
+                    matchedWords++;
+                    recUsed[bestMatch] = true;
+                    wordResults.push({
+                        ref: refWords[i],
+                        rec: recWords[bestMatch],
+                        correct: refWords[i].toLowerCase() === recWords[bestMatch].toLowerCase()
+                    });
+                } else {
+                    wordResults.push({ ref: refWords[i], rec: null, correct: false });
+                }
+            }
+
+            // Scores
+            const wordAccuracy = refWords.length > 0 ? matchedWords / refWords.length : 0;
+            const charSimilarity = refNormalized.length > 0
+                ? 1 - levenshteinDistance(refNormalized, recNormalized) / Math.max(refNormalized.length, recNormalized.length)
+                : 0;
+            const completeness = refWords.length > 0 ? Math.min(recWords.length / refWords.length, 1) : 0;
+
+            // Overall score (weighted)
+            const overallScore = Math.round((wordAccuracy * 0.55 + charSimilarity * 0.25 + completeness * 0.2) * 100);
+
+            // Speech speed
+            const durationMinutes = (recordingEndTime - recordingStartTime) / 60000;
+            const wordsPerMinute = durationMinutes > 0 ? Math.round(recWords.length / durationMinutes) : 0;
+
+            // Display results
+            scoreNumber.textContent = overallScore;
+            scoreCircle.className = 'score-circle ' +
+                (overallScore >= 85 ? 'great' : overallScore >= 65 ? 'good' : overallScore >= 40 ? 'practice' : 'needs-work');
+
+            if (overallScore >= 85) {
+                feedbackText.textContent = '🎉 太棒了！发音非常标准！Excellent!';
+            } else if (overallScore >= 65) {
+                feedbackText.textContent = '👍 不错！继续练习，你会越来越好！Good job!';
+            } else if (overallScore >= 40) {
+                feedbackText.textContent = '📖 加油！多练习几遍吧。Keep practicing!';
+            } else {
+                feedbackText.textContent = '💪 别灰心！尝试放慢速度，清晰发音。Try again slower!';
+            }
+
+            accuracyVal.textContent = Math.round(wordAccuracy * 100) + '%';
+            completenessVal.textContent = Math.round(completeness * 100) + '%';
+            wordsMatchedVal.textContent = matchedWords + '/' + refWords.length;
+            speechSpeedVal.textContent = wordsPerMinute;
+
+            // Word comparison display
+            let comparisonHTML = '<div style="font-weight:600;margin-bottom:8px;">🔍 逐词对比：</div>';
+            for (const wr of wordResults) {
+                if (wr.correct) {
+                    comparisonHTML += '<span class="word-correct">' + wr.ref + '</span> ';
+                } else if (wr.rec === null) {
+                    comparisonHTML += '<span class="word-missing">' + wr.ref + '</span> ';
+                } else {
+                    comparisonHTML += '<span class="word-wrong" title="你读的是: ' + wr.rec + '">' + wr.ref + '</span> ';
+                }
+            }
+            if (recWords.length > refWords.length) {
+                const extraWords = recWords.slice(refWords.length);
+                comparisonHTML += ' <span style="color:#94A3B8;font-size:12px;">(多余: ' + extraWords.join(', ') + ')</span>';
+            }
+            wordComparison.innerHTML = comparisonHTML;
+
+            resultsDiv.classList.add('show');
+            resultsDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        // ============ Event Listeners ============
+        btnRecord.addEventListener('click', () => {
+            if (isRecording) {
+                stopRecording();
+            } else {
+                startRecording();
+            }
+        });
+
+        btnPlay.addEventListener('click', playRecording);
+        btnReset.addEventListener('click', () => {
+            stopRecording();
+            finalTranscript = '';
+            interimTranscript = '';
+            recordedBlob = null;
+            audioChunks = [];
+            btnPlay.disabled = true;
+            resultsDiv.classList.remove('show');
+            liveTranscript.innerHTML = '<span style="color:#94A3B8;">🎤 点击下方按钮开始录音，你的语音将实时显示在这里...</span>';
+            liveTranscript.classList.remove('listening');
+            canvasCtx.clearRect(0, 0, waveformCanvas.width, waveformCanvas.height);
+            drawIdleWaveform();
+        });
+
+        sentenceSelect.addEventListener('change', () => {
+            if (sentenceSelect.value === 'custom') {
+                customInput.style.display = 'block';
+                customInput.focus();
+                referenceDisplay.textContent = customInput.value || '（请输入自定义句子）';
+            } else {
+                customInput.style.display = 'none';
+                referenceDisplay.textContent = sentenceSelect.value;
+            }
+            // Reset
+            btnReset.click();
+        });
+
+        customInput.addEventListener('input', () => {
+            if (sentenceSelect.value === 'custom') {
+                referenceDisplay.textContent = customInput.value || '（请输入自定义句子）';
+            }
+            btnReset.click();
+        });
+
+        // Keyboard shortcut: Space to toggle recording
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && e.target === document.body) {
+                e.preventDefault();
+                if (isRecording) stopRecording();
+                else startRecording();
+            }
+        });
+
+        // Initial setup
+        referenceDisplay.textContent = sentenceSelect.value;
+        console.log('✅ SpeakBetter 英语发音评测已就绪');
+        console.log('💡 提示：使用Chrome浏览器获得最佳体验（支持语音识别）');
+        console.log('⌨️ 快捷键：按空格键开始/停止录音');
+    })();
+</script>
+</body>
+</html>
